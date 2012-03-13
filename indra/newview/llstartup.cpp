@@ -3869,6 +3869,7 @@ std::string LLStartUp::startupStateToString(EStartupState state)
 #define RTNENUM(E) case E: return #E
 	switch(state){
 		RTNENUM( STATE_FIRST );
+		RTNENUM( STATE_BROWSER_INIT );
 		RTNENUM( STATE_LOGIN_SHOW );
 		RTNENUM( STATE_LOGIN_WAIT );
 		RTNENUM( STATE_LOGIN_CLEANUP );
@@ -3882,6 +3883,7 @@ std::string LLStartUp::startupStateToString(EStartupState state)
 		RTNENUM( STATE_LOGIN_DOWNLOADING );
 		RTNENUM( STATE_LOGIN_PROCESS_RESPONSE );
 		RTNENUM( STATE_WORLD_INIT );
+		RTNENUM( STATE_MULTIMEDIA_INIT );
 		RTNENUM( STATE_FONT_INIT );
 		RTNENUM( STATE_SEED_GRANTED_WAIT );
 		RTNENUM( STATE_SEED_CAP_GRANTED );
@@ -3896,6 +3898,8 @@ std::string LLStartUp::startupStateToString(EStartupState state)
 		RTNENUM( STATE_STARTED );
 	}
 #undef RTNENUM
+	// Never reached.
+	return llformat("(state #%d)", state);
 }
 
 
