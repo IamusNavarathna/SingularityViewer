@@ -642,7 +642,7 @@ void LLCurl::Multi::unlock()
 
 void LLCurl::Multi::markDead()
 {
-	ASSERT_SINGLE_THREAD;
+	//*** Multi-threaded.
 	AISTAccess<bool> dead_w(mDead);
 	*dead_w = true;
 	(*AIAccess<LLCurlThread*>(LLCurl::getCurlThread()))->setPriority(mHandle, LLQueuedThread::PRIORITY_URGENT);
@@ -694,7 +694,7 @@ bool LLCurl::Multi::waitToComplete()
 
 CURLMsg* LLCurl::Multi::info_read(S32* msgs_in_queue)
 {
-	ASSERT_SINGLE_THREAD;
+	//*** Multi-threaded.
 	LLMutexLock lock(mMutexp) ;
 
 	CURLMsg* curlmsg = curl_multi_info_read(mCurlMultiHandle, msgs_in_queue);
@@ -704,7 +704,7 @@ CURLMsg* LLCurl::Multi::info_read(S32* msgs_in_queue)
 //return true if dead
 bool LLCurl::Multi::doPerform()
 {
-	ASSERT_SINGLE_THREAD;
+	//*** Multi-threaded.
 	bool dead = *AISTAccess<bool>(mDead);
 
 	if (dead)
@@ -833,7 +833,7 @@ LLCurl::Easy* LLCurl::Multi::allocEasy()
 
 bool LLCurl::Multi::addEasy(Easy* easy)
 {
-	ASSERT_SINGLE_THREAD;
+	//*** Multi-threaded.
 	LLMutexLock lock(mMutexp) ;
 	CURLMcode mcode = curl_multi_add_handle(mCurlMultiHandle, easy->getCurlHandle());
 	check_curl_multi_code(mcode);
