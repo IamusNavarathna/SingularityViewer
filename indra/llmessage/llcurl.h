@@ -44,6 +44,7 @@
 #include "llthread.h"
 #include "llqueuedthread.h"
 #include "llframetimer.h"
+#include "aithreadsafe.h"
 
 class LLMutex;
 class LLCurlThread;
@@ -134,6 +135,13 @@ public:
 	};
 	typedef boost::intrusive_ptr<Responder>	ResponderPtr;
 
+	/**
+	 * @brief Type of Certificate Authority.
+	 */
+	struct sCA_type {
+		std::string file;
+		std::string path;
+	};
 
 	/**
 	 * @ brief Set certificate authority file used to verify HTTPS certs.
@@ -151,14 +159,9 @@ public:
 	static std::string getVersionString();
 	
 	/**
-	 * @ brief Get certificate authority file used to verify HTTPS certs.
+	 * @ brief Get certificate authority file and path used to verify HTTPS certs.
 	 */
-	static const std::string& getCAFile() { return sCAFile; }
-
-	/**
-	 * @ brief Get certificate authority path used to verify HTTPS certs.
-	 */
-	static const std::string& getCAPath() { return sCAPath; }
+	static AIThreadSafeSimple<sCA_type> const& getCA() { return sCA; }
 
 	/**
 	 * @ brief Initialize LLCurl class
@@ -182,7 +185,7 @@ public:
 	static void ssl_locking_callback(int mode, int type, const char *file, int line);
 	static unsigned long ssl_thread_id(void);
 
-	static LLCurlThread* getCurlThread() { return sCurlThread ;}
+	static AIThreadSafeSimple<LLCurlThread*>& getCurlThread() { return sCurlThread; }
 
 	static CURLM* newMultiHandle() ;
 	static CURLMcode deleteMultiHandle(CURLM* handle) ;
@@ -190,17 +193,21 @@ public:
 	static void   deleteEasyHandle(CURL* handle) ;
 
 private:
-	static std::string sCAPath;
-	static std::string sCAFile;
+	static AIThreadSafeSimpleDC<sCA_type> sCA;
 	static const unsigned int MAX_REDIRECTS;
-	static LLCurlThread* sCurlThread;
+	static AIThreadSafeSimpleDC<LLCurlThread*> sCurlThread;
 
-	static LLMutex* sHandleMutexp ;
-	static S32      sTotalHandles ;
-	static S32      sMaxHandles;
+	static AIThreadSafeSimpleDC<S32> sTotalHandles;
+
+	static S32      sMaxHandles;			// Read only. Initialized pre-threads in initClass.
+	static bool     sNotQuitting;			// Read only. Written to only post-threads(?) in cleanupClass.
+	static F32      sCurlRequestTimeOut;	// Read only. Initialized pre-threads in initClass.
+
 public:
-	static bool     sNotQuitting;
-	static F32      sCurlRequestTimeOut;	
+	// Accessors for 'read-only' variables.
+	static S32 getMaxHandles() { return sMaxHandles; }
+	static bool getNotQuitting() { return sNotQuitting; }
+	static F32 getCurlRequestTimeOut() { return sCurlRequestTimeOut; }
 };
 
 class LLCurl::Easy
@@ -305,7 +312,7 @@ public:
 	
 	bool isCompleted() ;
 	bool isValid() {return mCurlMultiHandle != NULL ;}
-	bool isDead() {return mDead;}
+	AIThreadSafeSingleThread<bool> const& isDead(void) const { return mDead; }
 
 	bool waitToComplete() ;
 
@@ -332,9 +339,8 @@ private:
 	LLQueuedThread::handle_t mHandle ;
 	ePerformState mState;
 
-	BOOL mDead ;
+	AIThreadSafeSingleThreadDC<bool> mDead;
 	LLMutex* mMutexp ;
-	LLMutex* mDeletionMutexp ;
 	LLMutex* mEasyMutexp ;
 	LLFrameTimer mIdleTimer ;
 	F32 mIdleTimeOut;
