@@ -263,7 +263,7 @@ void LLCurl::Easy::releaseEasyHandle(CURL* handle)
 		//llerrs << "handle cannot be NULL!" << llendl;
 	}
 
-	ASSERT_SINGLE_THREAD;
+	//*** Multi-Threaded (logout?)
 	LLMutexLock lock(sHandleMutexp) ;
 	if (sActiveHandles.find(handle) != sActiveHandles.end())
 	{
@@ -749,7 +749,7 @@ bool LLCurl::Multi::doPerform()
 
 S32 LLCurl::Multi::process()
 {
-	ASSERT_SINGLE_THREAD;
+	//*** Multi-threaded.
 	if(!isValid())
 	{
 		return 0 ;
@@ -847,7 +847,7 @@ bool LLCurl::Multi::addEasy(Easy* easy)
 
 void LLCurl::Multi::easyFree(Easy* easy)
 {
-	ASSERT_SINGLE_THREAD;
+	//*** Multi-threaded.
 	if(mEasyMutexp)
 	{
 		mEasyMutexp->lock() ;
@@ -879,7 +879,7 @@ void LLCurl::Multi::easyFree(Easy* easy)
 
 void LLCurl::Multi::removeEasy(Easy* easy)
 {
-	ASSERT_SINGLE_THREAD;
+	//*** Multi-threaded.
 	{
 		LLMutexLock lock(mMutexp) ;
 		check_curl_multi_code(curl_multi_remove_handle(mCurlMultiHandle, easy->getCurlHandle()));
