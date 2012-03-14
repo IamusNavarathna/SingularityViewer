@@ -551,6 +551,7 @@ LLCurl::Multi::Multi(F32 idle_time_out)
 	  mMutexp(NULL),
 	  mEasyMutexp(NULL)
 {
+	*AISTAccess<bool>(mDead) = false;
 	mCurlMultiHandle = LLCurl::newMultiHandle();
 	if (!mCurlMultiHandle)
 	{
@@ -1480,7 +1481,7 @@ void LLCurl::cleanupClass()
 
 	//shut down curl thread
 	AIAccess<LLCurlThread*> curl_thread_w(sCurlThread);
-	LLCurlThread*& curl_thread_p(*curl_thread_w);
+	LLCurlThread*& curl_thread_p = *curl_thread_w;
 	while(1)
 	{
 		if(!curl_thread_p->update(1)) //finish all tasks
