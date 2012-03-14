@@ -263,7 +263,7 @@ void LLCurl::Easy::releaseEasyHandle(CURL* handle)
 		//llerrs << "handle cannot be NULL!" << llendl;
 	}
 
-	//*** Multi-Threaded (logout?)
+	//*** Multi-Threaded (logout only?)
 	LLMutexLock lock(sHandleMutexp) ;
 	if (sActiveHandles.find(handle) != sActiveHandles.end())
 	{
@@ -923,8 +923,10 @@ bool LLCurlThread::CurlRequest::processRequest()
 
 void LLCurlThread::CurlRequest::finishRequest(bool completed)
 {
-	AIAccessConst<bool> dead_w(mMulti->isDead());
-	if (*dead_w)
+	// The lock on LLCurl::Multi::mDead must be released before we delete mMulti. So just make a copy.
+	bool dead = *AIAccessConst<bool>(mMulti->isDead());
+	// The lock is now released again.
+	if (dead)
 	{
 		mCurlThread->deleteMulti(mMulti) ;
 	}
@@ -1581,7 +1583,7 @@ CURL*  LLCurl::newEasyHandle()
 //static 
 void  LLCurl::deleteEasyHandle(CURL* handle)
 {
-	ASSERT_SINGLE_THREAD;
+	//*** Multi-threaded (logout only?).
 	if(handle)
 	{
 		AIAccess<S32> sTotalHandles_w(sTotalHandles);
