@@ -312,7 +312,7 @@ public:
 	
 	bool isCompleted() ;
 	bool isValid() {return mCurlMultiHandle != NULL ;}
-	AIThreadSafeSingleThread<bool> const& isDead(void) const { return mDead; }
+	AIThreadSafeSimple<bool> const& isDead(void) const { return mDead; }
 
 	bool waitToComplete() ;
 
@@ -339,7 +339,7 @@ private:
 	LLQueuedThread::handle_t mHandle ;
 	ePerformState mState;
 
-	AIThreadSafeSingleThreadDC<bool> mDead;
+	AIThreadSafeSimpleDC<bool> mDead;
 	LLMutex* mMutexp ;
 	LLMutex* mEasyMutexp ;
 	LLFrameTimer mIdleTimer ;

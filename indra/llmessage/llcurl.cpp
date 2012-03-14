@@ -551,7 +551,7 @@ LLCurl::Multi::Multi(F32 idle_time_out)
 	  mMutexp(NULL),
 	  mEasyMutexp(NULL)
 {
-	*AISTAccess<bool>(mDead) = false;
+	*AIAccess<bool>(mDead) = false;
 	mCurlMultiHandle = LLCurl::newMultiHandle();
 	if (!mCurlMultiHandle)
 	{
@@ -643,7 +643,7 @@ void LLCurl::Multi::unlock()
 void LLCurl::Multi::markDead()
 {
 	//*** Multi-threaded.
-	AISTAccess<bool> dead_w(mDead);
+	AIAccess<bool> dead_w(mDead);
 	*dead_w = true;
 	(*AIAccess<LLCurlThread*>(LLCurl::getCurlThread()))->setPriority(mHandle, LLQueuedThread::PRIORITY_URGENT);
 }
@@ -705,7 +705,7 @@ CURLMsg* LLCurl::Multi::info_read(S32* msgs_in_queue)
 bool LLCurl::Multi::doPerform()
 {
 	//*** Multi-threaded.
-	bool dead = *AISTAccess<bool>(mDead);
+	bool dead = *AIAccess<bool>(mDead);
 
 	if (dead)
 	{
@@ -923,7 +923,7 @@ bool LLCurlThread::CurlRequest::processRequest()
 
 void LLCurlThread::CurlRequest::finishRequest(bool completed)
 {
-	AISTAccessConst<bool> dead_w(mMulti->isDead());
+	AIAccessConst<bool> dead_w(mMulti->isDead());
 	if (*dead_w)
 	{
 		mCurlThread->deleteMulti(mMulti) ;
