@@ -128,10 +128,10 @@ public:
 			}
 
 	public: /* but not really -- don't touch this */
-		U32 mReferenceCount;
+		AIThreadSafeSingleThreadDC<U32> mReferenceCount;
 
 	private:
-		std::string mURL;
+		AIThreadSafeSingleThreadDC<std::string> mURL;
 	};
 	typedef boost::intrusive_ptr<Responder>	ResponderPtr;
 
@@ -257,24 +257,27 @@ private:
 	friend class LLCurl;
 	friend class LLCurl::Multi;
 
-	CURL*				mCurlEasyHandle;
-	struct curl_slist*	mHeaders;
+	AIThreadSafeSingleThreadDC<CURL*> mCurlEasyHandle;
+	AIThreadSafeSingleThreadDC<curl_slist*> mHeaders;
 
-	std::stringstream	mRequest;
-	LLChannelDescriptors mChannels;
-	LLIOPipe::buffer_ptr_t mOutput;
-	std::stringstream	mInput;
-	std::stringstream	mHeaderOutput;
-	char				mErrorBuffer[CURL_ERROR_SIZE];
+	//AIThreadSafeSingleThreadDC<std::stringstream> mRequest;
+	AIThreadSafeSingleThreadDC<LLChannelDescriptors> mChannels;
+	AIThreadSafeSingleThreadDC<LLIOPipe::buffer_ptr_t> mOutput;
+	AIThreadSafeSingleThreadDC<std::stringstream> mInput;
+	AIThreadSafeSingleThreadDC<std::stringstream> mHeaderOutput;
+	char mErrorBuffer[CURL_ERROR_SIZE];
 
 	// Note: char*'s not strings since we pass pointers to curl
-	std::vector<char*>	mStrings;
+	AIThreadSafeSingleThreadDC<std::vector<char*> > mStrings;
 
-	LLCurl::ResponderPtr		mResponder;
+	AIThreadSafeSingleThreadDC<LLCurl::ResponderPtr> mResponder;
 
-	static std::set<CURL*> sFreeHandles;
-	static std::set<CURL*> sActiveHandles;
-	static LLMutex*        sHandleMutexp ;
+	struct Handles {
+		std::set<CURL*> free;
+		std::set<CURL*> active;
+	};
+
+	static AIThreadSafeSimpleDC<Handles> sHandles;
 };
 
 class LLCurl::Multi
@@ -320,30 +323,30 @@ public:
 	
 	CURLMsg* info_read(S32* msgs_in_queue);
 
-	S32 mQueued;
-	S32 mErrorCount;
+	AIThreadSafeSingleThreadDC<S32> mQueued;
+	AIThreadSafeSingleThreadDC<S32> mErrorCount;
 	
 private:
 	void easyFree(LLCurl::Easy*);
 	void cleanup() ;
 	
-	CURLM* mCurlMultiHandle;
+	AIThreadSafeSingleThreadDC<CURLM*> mCurlMultiHandle;
 
 	typedef std::set<LLCurl::Easy*> easy_active_list_t;
-	easy_active_list_t mEasyActiveList;
+	AIThreadSafeSingleThreadDC<easy_active_list_t> mEasyActiveList;
 	typedef std::map<CURL*, LLCurl::Easy*> easy_active_map_t;
-	easy_active_map_t mEasyActiveMap;
+	AIThreadSafeSingleThreadDC<easy_active_map_t> mEasyActiveMap;
 	typedef std::set<LLCurl::Easy*> easy_free_list_t;
-	easy_free_list_t mEasyFreeList;
+	AIThreadSafeSingleThreadDC<easy_free_list_t> mEasyFreeList;
 
-	LLQueuedThread::handle_t mHandle ;
-	ePerformState mState;
+	AIThreadSafeSingleThreadDC<LLQueuedThread::handle_t> mHandle ;
+	AIThreadSafeSimpleDC<ePerformState> mState;
 
 	AIThreadSafeSimpleDC<bool> mDead;
 	LLMutex* mMutexp ;
 	LLMutex* mEasyMutexp ;
-	LLFrameTimer mIdleTimer ;
-	F32 mIdleTimeOut;
+	AIThreadSafeSingleThreadDC<LLFrameTimer> mIdleTimer ;
+	AIThreadSafeSingleThreadDC<F32> mIdleTimeOut;
 };
 
 class LLCurlThread : public LLQueuedThread
